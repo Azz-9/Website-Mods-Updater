@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<title>Minecraft Mod Updater</title>
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="css/home.css">
+	<script src="javascript/indexedDBManager.js"></script>
+	<script src="javascript/home.js"></script>
+	<script src="javascript/dragNDrop.js"></script>
+	<script src="javascript/mod.js"></script>
+	<script src="javascript/loadingBarUtils.js"></script>
+
+	<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+<body>
+
+<header>
+	<h1>Minecraft Mod Updater</h1>
+	<nav>
+		<a href="index.html" class="active">Accueil</a>
+		<a href="search.html">Recherche</a>
+		<a href="logs.html">Historique</a>
+	</nav>
+</header>
+
+<main>
+	<section id="drag_n_drop_section">
+		<div id="drag_n_drop">
+			<span>
+				Glissez déposez vos mods ici&nbsp;!
+			</span>
+		</div>
+		<input type="file" id="file-input" accept=".jar" multiple style="display: none;">
+	</section>
+	<section id="loading-section">
+		<span>Chargement...</span>
+		<div id="loading-bar-bg">
+			<div id="loading-bar-fill"></div>
+		</div>
+	</section>
+	<section id="mods-list">
+		<h2>Vos mods</h2>
+		<div id="search-input-container">
+			<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
+			<input type="text" id="search-input" placeholder="Rechercher un mod..." oninput="refreshModsList()">
+			<button class="main-btn" id="update-mods-btn">
+				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M482-160q-134 0-228-93t-94-227v-7l-64 64-56-56 160-160 160 160-56 56-64-64v7q0 100 70.5 170T482-240q26 0 51-6t49-18l60 60q-38 22-78 33t-82 11Zm278-161L600-481l56-56 64 64v-7q0-100-70.5-170T478-720q-26 0-51 6t-49 18l-60-60q38-22 78-33t82-11q134 0 228 93t94 227v7l64-64 56 56-160 160Z"/></svg>
+				Mettre à jour les mods
+			</button>
+		</div>
+		<div class="pagination" style="display: none;">
+			<button aria-label="Previous page" onclick="onPaginationClick(-1)">
+				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"/></svg>
+			</button>
+			<span>1</span>
+			<button aria-label="Next page" onclick="onPaginationClick(1)">
+				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></svg>
+			</button>
+		</div>
+		<div id="no-mods">
+			<span>Chargement...</span>
+		</div>
+		<ul id="mods-container">
+			<!-- Les mods enregistrés apparaîtront ici -->
+			<template id="mod-template">
+				<li>
+					<div>
+						<a class="link" href="" target="_blank">
+							<img loading="lazy" class="thumbnail" src="" alt="">
+						</a>
+						<div>
+							<div class="header">
+								<a href="" class="link" target="_blank">
+									<h3 class="title"></h3>
+								</a>
+							</div>
+							<p class="description"></p>
+							<ul class="tags">
+
+							</ul>
+						</div>
+						<div class="right-info">
+							<input type="checkbox" id="toggle-btn-checkbox" style="display: none;">
+							<label for="toggle-btn-checkbox" class="toggle-btn-label" title="enable/disable">
+								<span class="toggle-btn-inner"></span>
+							</label>
+							<button class="main-btn red-btn">
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+								Supprimer
+							</button>
+						</div>
+					</div>
+				</li>
+			</template>
+		</ul>
+	</section>
+	<section id="pagination-section" style="display: none;">
+		<div class="pagination">
+			<button aria-label="Previous page" onclick="onPaginationClick(-1); document.querySelector('#mods-list > h2').scrollIntoView({behavior: 'smooth'});">
+				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"/></svg>
+			</button>
+			<span>1</span>
+			<button aria-label="Next page" onclick="onPaginationClick(1); document.querySelector('#mods-list > h2').scrollIntoView({behavior: 'smooth'});">
+				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></svg>
+			</button>
+		</div>
+	</section>
+	<div id="not-found-modal" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<h2>Mods non trouvés</h2>
+			<ul id="not-found-list"></ul>
+		</div>
+	</div>
+	<div id="update-mods-modal" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<h2>Options de mise à jour</h2>
+
+			<div class="form-group">
+				<!-- Loader selection -->
+				<label for="loader-select">Loader :</label>
+				<select id="loader-select">
+					<option value="fabric">Fabric</option>
+					<option value="forge">Forge</option>
+					<option value="neoforge">NeoForge</option>
+					<option value="quilt">Quilt</option>
+				</select>
+
+
+				<!-- Version selection -->
+				<label for="version-select">Version :</label>
+				<select id="version-select">
+					<option value="1.21.8">1.21.8</option>
+					<option value="1.20.1">1.20.6</option>
+					<option value="1.19.4">1.19.4</option>
+					<option value="1.18.2">1.18.2</option>
+					<option value="1.16.5">1.16.5</option>
+				</select>
+			</div>
+
+			<!-- Folder selection -->
+			<!-- <div class="folder-selection">
+				<button id="file-selector-btn">Sélectionner un dossier</button>
+				<input type="text" id="file-selector">
+			</div> -->
+
+			<!-- Buttons -->
+			<div class="modal-actions">
+				<button id="update-btn" class="main-btn">Mettre à jour</button>
+				<button id="cancel-btn" class="main-btn red-btn">Annuler</button>
+			</div>
+		</div>
+	</div>
+</main>
+</body>
+</html>

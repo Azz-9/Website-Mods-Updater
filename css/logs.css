@@ -1,0 +1,46 @@
+#date {
+	margin-bottom: 20px;
+}
+
+#selected-options {
+	margin-bottom: 15px;
+}
+
+h4 {
+	margin-bottom: 10px;
+}
+
+#not-available-mods-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 15px;
+}
+
+#not-available-mods-list > li {
+	width: 49%;
+}
+
+.card {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	background: #2a2a2a;
+	padding: 10px;
+	border-radius: 10px;
+}
+
+.card .thumbnail {
+	width: 50px;
+	height: 50px;
+	object-fit: cover;
+	border-radius: 5px;
+}
+
+.card .title {
+	font-size: 1.5em;
+	font-weight: bold;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
