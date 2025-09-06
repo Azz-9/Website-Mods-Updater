@@ -118,6 +118,8 @@ function refreshModsList() {
     const query = document.querySelector("#search-input").value;
     return getAllMods().then(mods => {
 
+        document.querySelector("#mods-list > h2").innerText = `Vos mods (${mods.length})`
+
         if (mods.length > 0) {
             noModsSpan.innerText = "Aucun résultat";
         } else {
