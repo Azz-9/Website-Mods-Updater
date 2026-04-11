@@ -19,6 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const files = event.dataTransfer.files; // FileList
         await handleSelectedFiles(files);
+		await refreshModsList();
+		refreshPagination();
     });
 
     document.querySelector("#not-found-modal .close").addEventListener("click", () => {
@@ -40,9 +42,11 @@ document.addEventListener("DOMContentLoaded", () => {
         fileInput.click();
     });
 
-    fileInput.addEventListener("change", (event) => {
+    fileInput.addEventListener("change", async (event) => {
         const files = Array.from(event.target.files);
-        handleSelectedFiles(files);
+        await handleSelectedFiles(files);
+		await refreshModsList();
+		refreshPagination();
     });
 });
 
