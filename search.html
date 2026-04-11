@@ -2,20 +2,25 @@
 <html lang="fr">
 <head>
 	<meta charset="UTF-8">
-	<title>Recherche de mods</title>
+	<title data-i18n="navbar.search.title">Search mods</title>
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="stylesheet" href="css/search.css">
 	<script src="javascript/search.js"></script>
 	<script src="javascript/indexedDBManager.js"></script>
 	<script src="javascript/mod.js"></script>
+	<script src="javascript/i18n.js"></script>
 </head>
 <body>
 <header>
-	<h1>Recherche de Mods</h1>
+	<h1 data-i18n="navbar.search.title">Search mods</h1>
 	<nav>
-		<a href="index.html">Accueil</a>
-		<a href="search.html" class="active">Recherche</a>
-		<a href="logs.html">Historique</a>
+		<a data-i18n="navbar.home.label" href="index.html">Home</a>
+		<a data-i18n="navbar.search.label" href="search.html" class="active">Search</a>
+		<a data-i18n="navbar.history.label" href="logs.html">History</a>
+		<select name="lang" id="lang-select">
+			<option value="fr">FR</option>
+			<option value="en">EN</option>
+		</select>
 	</nav>
 </header>
 
@@ -24,11 +29,11 @@
 		<div>
 			<input type="checkbox" id="hide-saved-mods" style="display: none;"
 			       onchange="onAnyParameterChange(); search();">
-			<label for="hide-saved-mods">Cacher les mods enregistrés</label>
+			<label for="hide-saved-mods" data-i18n="search.filter.hide_saved_mods">Hide saved mods</label>
 		</div>
 		<div class="filter" id="game-version-filter">
 			<button>
-				<span>Version du jeu</span>
+				<span data-i18n="search.filter.version">Game version</span>
 				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 					<path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
 				</svg>
@@ -38,7 +43,7 @@
 		</div>
 		<div class="filter" id="loader-filter">
 			<button>
-				<span>Loader</span>
+				<span data-i18n="search.filter.loader">Loader</span>
 				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 					<path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
 				</svg>
@@ -48,7 +53,7 @@
 		</div>
 		<div class="filter" id="tags-filter">
 			<button>
-				<span>Catégories</span>
+				<span data-i18n="search.filter.categories">Categories</span>
 				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 					<path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
 				</svg>
@@ -58,14 +63,14 @@
 		</div>
 		<div class="filter" id="environment-filter">
 			<button>
-				<span>Environement</span>
+				<span data-i18n="search.filter.environment">Environment</span>
 				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 					<path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
 				</svg>
 			</button>
 			<ol>
-				<li data-value="client">Client</li>
-				<li data-value="server">Serveur</li>
+				<li data-value="client" data-i18n="search.filter.client">Client</li>
+				<li data-value="server" data-i18n="search.filter.server">Server</li>
 			</ol>
 		</div>
 	</section>
@@ -75,27 +80,30 @@
 				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 					<path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
 				</svg>
-				<input type="text" id="search-input" placeholder="Rechercher un mod..." oninput="onSearchInputChange()">
+				<input type="text" id="search-input" data-i18n-placeholder="search.search_placeholder"
+				       placeholder="Search for a mod..." oninput="onSearchInputChange()">
 				<button id="search-btn" class="main-btn" onclick="search()">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 						<path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
 					</svg>
-					Rechercher
+					<span data-i18n="search.search_label">
+						Search
+					</span>
 				</button>
 			</div>
 			<div>
 				<div>
-					<label for="sort-by">Trier par:</label>
+					<label for="sort-by" data-i18n="search.sort.label">Sort by:</label>
 					<select id="sort-by" onchange="onSortSelectChange()">
-						<option value="relevance" selected>Pertinence</option>
-						<option value="downloads">Téléchargements</option>
-						<option value="follows">Abonnés</option>
-						<option value="newest">Date de publication</option>
-						<option value="updated">Date de mise à jour</option>
+						<option data-i18n="search.sort.relevance" value="relevance" selected>Relevance</option>
+						<option data-i18n="search.sort.downloads" value="downloads">Downloads</option>
+						<option data-i18n="search.sort.follows" value="follows">Follows</option>
+						<option data-i18n="search.sort.newest" value="newest">Newest</option>
+						<option data-i18n="search.sort.updated" value="updated">Updated</option>
 					</select>
 				</div>
 				<div>
-					<label for="view">Vue:</label>
+					<label for="view" data-i18n="search.view.label">View:</label>
 					<select id="view" onchange="onLimitSelectChange()">
 						<option value="5">5</option>
 						<option value="10">10</option>
@@ -145,18 +153,20 @@
 							<div class="right-info">
 								<div>
 									<span class="value downloads"></span>
-									<span>downloads</span>
+									<span data-i18n="search.search_results.downloads">downloads</span>
 								</div>
 								<div>
 									<span class="value followers"></span>
-									<span>followers</span>
+									<span data-i18n="search.search_results.followers">followers</span>
 								</div>
 								<button class="main-btn add">
 									<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
 									     width="24px">
 										<path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
 									</svg>
-									Ajouter ce mod
+									<span data-i18n="search.search_results.add_mod">
+										Add this mod
+									</span>
 								</button>
 							</div>
 						</div>
@@ -165,7 +175,7 @@
 			</ul>
 			<div id="loading">
 				<div id="loading-square"></div>
-				<span id="loading-text">Chargement...</span>
+				<span id="loading-text" data-i18n="loading.label">Loading...</span>
 			</div>
 		</section>
 		<section id="pagination-section" style="display: none;">

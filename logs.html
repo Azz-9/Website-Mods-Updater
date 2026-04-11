@@ -2,33 +2,39 @@
 <html lang="fr">
 <head>
 	<meta charset="UTF-8">
-	<title>Historique</title>
+	<title data-i18n="navbar.history.title">Updates history</title>
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="stylesheet" href="css/logs.css">
 	<script src="javascript/logs.js"></script>
+	<script src="javascript/i18n.js"></script>
 </head>
 <body>
 <header>
-	<h1>Historique</h1>
+	<h1 data-i18n="navbar.history.title">Updates history</h1>
 	<nav>
-		<a href="index.html">Accueil</a>
-		<a href="search.html">Recherche</a>
-		<a href="logs.html" class="active">Historique</a>
+		<a data-i18n="navbar.home.label" href="index.html">Home</a>
+		<a data-i18n="navbar.search.label" href="search.html">Search</a>
+		<a data-i18n="navbar.history.label" href="logs.html" class="active">History</a>
+		<select name="lang" id="lang-select">
+			<option value="fr">FR</option>
+			<option value="en">EN</option>
+		</select>
 	</nav>
 </header>
 <main>
 	<div id="no-last-update">
-		<span>Chargement...</span>
+		<span data-i18n="loading.label">Loading...</span>
 	</div>
 	<section id="logs-section" style="display: none;">
-		<h2 id="date">Dernier téléchargement le 30/08/2025 à 19h 35m 10s</h2>
-		<h3 id="selected-options">Loader : Fabric, Version : 1.21.8</h3>
-		<h4>Mods qui ne sont pas disponible en fabric 1.21.8</h4>
+		<h2 id="date" data-i18n="logs.latest_update">Latest update on 30/08/2025 at 19h 35m 10s</h2>
+		<h3 id="selected-options" data-i18n="logs.selected_options">Loader : Fabric, Version : 1.21.8</h3>
+		<h4 data-i18n="logs.unavailable_mods">Mods that are not available in fabric 1.21.8</h4>
 		<div id="search-input-container">
 			<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 				<path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
 			</svg>
-			<input type="text" id="search-input" placeholder="Rechercher un mod...">
+			<input type="text" id="search-input" data-i18n-placeholder="logs.search_placeholder"
+			       placeholder="Search for a mod...">
 		</div>
 		<ul id="not-available-mods-list">
 			<template>

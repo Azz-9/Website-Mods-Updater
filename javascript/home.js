@@ -6,10 +6,17 @@ let numberOfPages = 1;
 let noModsDiv;
 let noModsSpan;
 
+let modsListTitle;
+let searchInput;
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 	noModsDiv = document.querySelector("#no-mods");
 	noModsSpan = noModsDiv.querySelector("& > span");
+	modsListTitle = document.querySelector("#mods-list > h2");
+	searchInput = document.querySelector("#search-input");
+
+	await i18n.init(refreshModsList);
+
 	const updateModsBtn = document.querySelector("#update-mods-btn");
 	const loaderSelect = document.querySelector("#loader-select");
 	const versionSelect = document.querySelector("#version-select");
@@ -94,15 +101,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 function refreshModsList() {
-	const query = document.querySelector("#search-input").value;
+	const query = searchInput.value;
 	return getAllMods().then(mods => {
 
-		document.querySelector("#mods-list > h2").innerText = `Vos mods (${mods.length})`
+		modsListTitle.innerText = i18n.get("home.mods_list.title", {count: mods.length});
 
 		if (mods.length > 0) {
-			noModsSpan.innerText = "Aucun résultat";
+			noModsSpan.innerText = i18n.get("home.mods_list.no_result");
 		} else {
-			noModsSpan.innerText = "Vous n'avez aucun mod enregistré";
+			noModsSpan.innerText = i18n.get("home.mods_list.no_mods");
 		}
 
 		// Filter mods by query
@@ -238,7 +245,6 @@ async function downloadModsAsZip(mods, loader, version) {
 		// Ajouter au zip
 		zip.file(fileInfo.filename, arrayBuffer);
 
-		console.log(`Ajouté au zip: ${fileInfo.filename}`);
 		stepLoadingBar();
 
 		return fileInfo.filename;

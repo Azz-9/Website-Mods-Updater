@@ -1,0 +1,72 @@
+{
+	"title": "Minecraft Mod Updater",
+	"navbar": {
+		"home": {
+			"label": "Home",
+			"title": "Minecraft Mods Updater"
+		},
+		"search": {
+			"label": "Search",
+			"title": "Search mods"
+		},
+		"history": {
+			"label": "History",
+			"title": "Updates history"
+		}
+	},
+	"loading": {
+		"label": "Loading..."
+	},
+	"home": {
+		"drag_n_drop": {
+			"label": "Drag and drop your mods here!"
+		},
+		"mods_list": {
+			"title": "Your mods ({{count}})",
+			"search_placeholder": "Search for a mod...",
+			"update_btn": "Update mods",
+			"delete_btn": "Delete",
+			"no_result": "No result",
+			"no_mods": "You haven't saved any mod yet"
+		},
+		"modal": {
+			"not_found_title": "Mods not found"
+		}
+	},
+	"search": {
+		"filter": {
+			"hide_saved_mods": "Hide saved mods",
+			"version": "Game version",
+			"loader": "Loader",
+			"categories": "Categories",
+			"environment": "Environment",
+			"client": "Client",
+			"server": "Server"
+		},
+		"search_placeholder": "Search for a mod...",
+		"search_label": "Search",
+		"sort": {
+			"label": "Sort by:",
+			"relevance": "Relevance",
+			"downloads": "Downloads",
+			"follows": "Follows",
+			"newest": "Newest",
+			"updated": "Updated"
+		},
+		"view": {
+			"label": "View:"
+		},
+		"search_results": {
+			"downloads": "downloads",
+			"followers": "followers",
+			"add_mod": "Add this mod"
+		}
+	},
+	"logs": {
+		"latest_update": "Latest update on {{date}} at {{time}}",
+		"selected_options": "Loader : {{loader}}, Version : {{version}}",
+		"unavailable_mods": "Mods that are not available in {{loader}} {{version}}",
+		"search_placeholder": "Search for a mod...",
+		"no_update": "You've never made an update"
+	}
+}

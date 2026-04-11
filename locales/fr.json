@@ -1,0 +1,71 @@
+{
+	"navbar": {
+		"home": {
+			"label": "Accueil",
+			"title": "Minecraft Mods Updater"
+		},
+		"search": {
+			"label": "Recherche",
+			"title": "Recherche de mods"
+		},
+		"history": {
+			"label": "Historique",
+			"title": "Historique des mises à jours"
+		}
+	},
+	"loading": {
+		"label": "Chargement..."
+	},
+	"home": {
+		"drag_n_drop": {
+			"label": "Glissez déposez vos mods ici !"
+		},
+		"mods_list": {
+			"title": "Vos mods ({{count}})",
+			"search_placeholder": "Rechercher un mod...",
+			"update_btn": "Mettre à jour les mods",
+			"delete_btn": "Supprimer",
+			"no_result": "Aucun résultat",
+			"no_mods": "Vous n'avez aucun mod enregistré"
+		},
+		"modal": {
+			"not_found_title": "Mods non trouvés"
+		}
+	},
+	"search": {
+		"filter": {
+			"hide_saved_mods": "Cacher les mods enregistrés",
+			"version": "Version du jeu",
+			"loader": "Loader",
+			"categories": "Catégories",
+			"environment": "Environement",
+			"client": "Client",
+			"server": "Serveur"
+		},
+		"search_placeholder": "Rechercher un mod...",
+		"search_label": "Rechercher",
+		"sort": {
+			"label": "Trier par:",
+			"relevance": "Pertinence",
+			"downloads": "Téléchargements",
+			"follows": "Abonnés",
+			"newest": "Date de publication",
+			"updated": "Date de mise à jour"
+		},
+		"view": {
+			"label": "Vue:"
+		},
+		"search_results": {
+			"downloads": "téléchargements",
+			"followers": "abonnés",
+			"add_mod": "Ajouter ce mod"
+		}
+	},
+	"logs": {
+		"latest_update": "Dernière mise à jour le {{date}} à {{time}}",
+		"selected_options": "Loader : {{loader}}, Version : {{version}}",
+		"unavailable_mods": "Mods qui ne sont pas disponible en {{loader}} {{version}}",
+		"search_placeholder": "Rechercher un mod...",
+		"no_update": "Vous n'avez jamais fait de mise à jour"
+	}
+}

@@ -287,7 +287,9 @@ const defaultLimit = 20;
 const defaultSort = "relevance";
 const defaultPage = 1;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	await i18n.init();
+	
 	const promises = [];
 	promises.push(fetch("https://api.modrinth.com/v2/tag/game_version").then(response => response.json()).then(versions => {
 		const list = document.querySelector("#game-version-filter > ol");

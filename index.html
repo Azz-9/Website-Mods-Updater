@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 	<meta charset="UTF-8">
-	<title>Minecraft Mod Updater</title>
+	<title data-i18n="navbar.home.title">Minecraft Mod Updater</title>
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="stylesheet" href="css/home.css">
 	<script src="javascript/indexedDBManager.js"></script>
@@ -10,6 +10,7 @@
 	<script src="javascript/dragNDrop.js"></script>
 	<script src="javascript/mod.js"></script>
 	<script src="javascript/loadingBarUtils.js"></script>
+	<script src="javascript/i18n.js"></script>
 
 	<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
@@ -17,36 +18,41 @@
 <body>
 
 <header>
-	<h1>Minecraft Mod Updater</h1>
+	<h1 data-i18n="navbar.home.title">Minecraft Mod Updater</h1>
 	<nav>
-		<a href="index.html" class="active">Accueil</a>
-		<a href="search.html">Recherche</a>
-		<a href="logs.html">Historique</a>
+		<a data-i18n="navbar.home.label" href="index.html" class="active">Home</a>
+		<a data-i18n="navbar.search.label" href="search.html">Search</a>
+		<a data-i18n="navbar.history.label" href="logs.html">History</a>
+		<select name="lang" id="lang-select">
+			<option value="fr">FR</option>
+			<option value="en">EN</option>
+		</select>
 	</nav>
 </header>
 
 <main>
 	<section id="drag_n_drop_section">
 		<div id="drag_n_drop">
-			<span>
-				Glissez déposez vos mods ici&nbsp;!
+			<span data-i18n="home.drag_n_drop.label">
+				Drag and drop your mods here!
 			</span>
 		</div>
 		<input type="file" id="file-input" accept=".jar" multiple style="display: none;">
 	</section>
 	<section id="loading-section">
-		<span>Chargement...</span>
+		<span data-i18n="loading.label">Loading...</span>
 		<div id="loading-bar-bg">
 			<div id="loading-bar-fill"></div>
 		</div>
 	</section>
 	<section id="mods-list">
-		<h2>Vos mods</h2>
+		<h2 data-i18n="home.mods_list.title">Your mods</h2>
 		<div id="search-input-container">
 			<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 				<path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
 			</svg>
-			<input type="text" id="search-input" placeholder="Rechercher un mod..." oninput="refreshModsList()">
+			<input type="text" id="search-input" data-i18n-placeholder="home.mods_list.search_placeholder"
+			       placeholder="Search for a mod..." oninput="refreshModsList()">
 			<select name="loader" id="loader-select">
 			</select>
 			<select name="version" id="version-select">
@@ -55,7 +61,9 @@
 				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
 					<path d="M482-160q-134 0-228-93t-94-227v-7l-64 64-56-56 160-160 160 160-56 56-64-64v7q0 100 70.5 170T482-240q26 0 51-6t49-18l60 60q-38 22-78 33t-82 11Zm278-161L600-481l56-56 64 64v-7q0-100-70.5-170T478-720q-26 0-51 6t-49 18l-60-60q38-22 78-33t82-11q134 0 228 93t94 227v7l64-64 56 56-160 160Z"/>
 				</svg>
-				Mettre à jour les mods
+				<span data-i18n="home.mods_list.update_btn">
+					Update mods
+				</span>
 			</button>
 		</div>
 		<div class="pagination" style="display: none;">
@@ -72,7 +80,7 @@
 			</button>
 		</div>
 		<div id="no-mods">
-			<span>Chargement...</span>
+			<span data-i18n="loading.label">Loading...</span>
 		</div>
 		<ul id="mods-container">
 			<!-- Les mods enregistrés apparaîtront ici -->
@@ -103,7 +111,9 @@
 								     width="24px">
 									<path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
 								</svg>
-								Supprimer
+								<span data-i18n="home.mods_list.delete_btn">
+									Delete
+								</span>
 							</button>
 						</div>
 					</div>
@@ -131,7 +141,7 @@
 	<div id="not-found-modal" class="modal">
 		<div class="modal-content">
 			<span class="close">&times;</span>
-			<h2>Mods non trouvés</h2>
+			<h2 data-i18n="home.modal.not_found_title">Mods not found</h2>
 			<ul id="not-found-list"></ul>
 		</div>
 	</div>
