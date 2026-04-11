@@ -15,14 +15,18 @@ document.addEventListener("DOMContentLoaded", () => {
 	const versionSelect = document.querySelector("#version-select");
 
 	fetch("https://api.modrinth.com/v2/tag/game_version").then(response => response.json()).then(versions => {
+		versions = versions.filter(version => version["version_type"] === "release")
 		versions.forEach(version => {
-			if (version["version_type"] === "release") {
-				const option = new Option(version["version"], version["version"]);
-				versionSelect.add(option);
-			}
+			const option = new Option(version["version"], version["version"]);
+			versionSelect.add(option);
 		})
 
-		versionSelect.value = localStorage.getItem("version");
+		const selectedVersion = localStorage.getItem("version") 
+		if (selectedVersion) {
+			versionSelect.value = selectedVersion;
+		} else {
+			versionSelect.value = versions[0]["version"];
+		}
 	});
 
 	fetch("https://api.modrinth.com/v2/tag/loader").then(response => response.json()).then(loaders => {
@@ -58,7 +62,12 @@ document.addEventListener("DOMContentLoaded", () => {
 		// Append sorted options
 		options.forEach(option => loaderSelect.add(option));
 
-		loaderSelect.value = localStorage.getItem("loader");
+		const selectedLoader = localStorage.getItem("loader")
+		if (selectedLoader) {
+			loaderSelect.value = selectedLoader;
+		} else {
+			loaderSelect.value = options[0].value;
+		}
 	});
 
 	loaderSelect.addEventListener("change", () => {
