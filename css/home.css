@@ -20,6 +20,7 @@
 	text-align: center;
 	background-color: #232323;
 	transition: all 0.2s ease;
+
 	&:hover {
 		border-color: var(--accent-color);
 	}

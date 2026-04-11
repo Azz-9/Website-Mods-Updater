@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			versionSelect.add(option);
 		})
 
-		const selectedVersion = localStorage.getItem("version") 
+		const selectedVersion = localStorage.getItem("version")
 		if (selectedVersion) {
 			versionSelect.value = selectedVersion;
 		} else {
