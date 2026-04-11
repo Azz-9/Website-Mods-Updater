@@ -1,4 +1,12 @@
+let currentAbortController = null;
+
 async function fetchData(query, limit, offset, index, facets) {
+	if (currentAbortController) {
+		currentAbortController.abort();
+	}
+	currentAbortController = new AbortController();
+	const signal = currentAbortController.signal;
+
 	const url = new URL("https://api.modrinth.com/v2/search");
 	url.searchParams.set('query', query);
 	url.searchParams.set('limit', limit);
@@ -12,6 +20,9 @@ async function fetchData(query, limit, offset, index, facets) {
 			return await response.json();
 		}
 	} catch (error) {
+		if (error.name === 'AbortError') {
+			return null;
+		}
 		console.error(error.message);
 	}
 }
@@ -39,12 +50,12 @@ function search() {
 			modIds.forEach(modId => facets.push([`project_id!=${modId}`]));
 
 			fetchData(query, limit, offset, index, facets).then(results => {
-				addResults(results);
+				if (results) addResults(results);
 			});
 		});
 	} else {
 		fetchData(query, limit, offset, index, facets).then(results => {
-			addResults(results);
+			if (results) addResults(results);
 		});
 	}
 
