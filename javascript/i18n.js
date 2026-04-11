@@ -28,7 +28,7 @@ const i18n = (() => {
 	// Charge un fichier de traduction
 	async function load(locale) {
 		if (!translations[locale]) {
-			const response = await fetch(`/locales/${locale}.json`);
+			const response = await fetch(`locales/${locale}.json`);
 			translations[locale] = await response.json();
 		}
 		currentLocale = locale;
