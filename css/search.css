@@ -16,11 +16,12 @@ main > div {
 	gap: 10px;
 }
 
-#filters-section > div:first-of-type > label {
+.checkbox-label {
 	display: flex block;
 	padding: 14px;
 	cursor: pointer;
 	align-items: center;
+	width: max-content;
 
 	&::after {
 		content: "";
@@ -37,7 +38,7 @@ main > div {
 	}
 }
 
-#filters-section > div:first-of-type > input:checked + label::after {
+input:checked + .checkbox-label::after {
 	background-color: var(--accent-color-dark);
 	background-image: url("../assets/check.svg");
 }
@@ -133,7 +134,7 @@ main > div {
 	gap: 10px;
 }
 
-#search-section label {
+#search-section > div:last-child label {
 	position: absolute;
 	padding-left: 18px;
 	pointer-events: none;

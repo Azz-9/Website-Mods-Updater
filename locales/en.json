@@ -18,6 +18,7 @@
 		"label": "Loading..."
 	},
 	"home": {
+		"download_dependencies": "Download dependencies",
 		"drag_n_drop": {
 			"label": "Drag and drop your mods here!"
 		},
@@ -59,7 +60,8 @@
 		"search_results": {
 			"downloads": "downloads",
 			"followers": "followers",
-			"add_mod": "Add this mod"
+			"add_mod": "Add this mod",
+			"already_added": "Already added"
 		}
 	},
 	"logs": {

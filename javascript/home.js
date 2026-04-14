@@ -8,14 +8,22 @@ let noModsSpan;
 
 let modsListTitle;
 let searchInput;
+let downloadDependenciesCheckbox
 
 document.addEventListener("DOMContentLoaded", async () => {
 	noModsDiv = document.querySelector("#no-mods");
 	noModsSpan = noModsDiv.querySelector("& > span");
 	modsListTitle = document.querySelector("#mods-list > h2");
 	searchInput = document.querySelector("#search-input");
+	downloadDependenciesCheckbox = document.querySelector("#download-dependencies");
 
 	await i18n.init(refreshModsList);
+
+	downloadDependenciesCheckbox.checked = localStorage.getItem("download-dependencies") === "true";
+
+	downloadDependenciesCheckbox.addEventListener("change", () => {
+		localStorage.setItem("download-dependencies", downloadDependenciesCheckbox.checked);
+	})
 
 	const updateModsBtn = document.querySelector("#update-mods-btn");
 	const loaderSelect = document.querySelector("#loader-select");
@@ -206,59 +214,123 @@ function refreshPagination() {
 }
 
 async function downloadModsAsZip(mods, loader, version) {
-	startLoadingBar(mods.length + 2);
-
 	const zip = new JSZip();
-
 	const notAvailable = [];
 
-	const fetchPromises = mods.map(async mod => {
-		if (mod.enabled === false) return null;
+	// File d'attente des mods à traiter
+	const queue = [];
+	const queuedIds = new Set();
+
+	// Ajouter les mods initiaux
+	for (const mod of mods) {
+		// ne pas télécharger une dépendance qui est disabled dans la liste des mods
+		queuedIds.add(mod.id);
+
+		if (mod.enabled === false) continue;
+
+		queue.push({
+			id: mod.id,
+			icon_url: mod.icon_url,
+			title: mod.title,
+			isDependency: false
+		});
+	}
+
+	startLoadingBar(mods.length + 2);
+
+	while (queue.length > 0) {
+		const mod = queue.shift();
 
 		const url = `https://api.modrinth.com/v2/project/${mod.id}/version?loaders=["${loader}"]&game_versions=["${version}"]`;
 
-		const response = await fetch(url);
-		if (!response.ok) {
-			stepLoadingBar();
-			return null;
+		try {
+			const response = await fetch(url);
+
+			if (!response.ok) {
+				stepLoadingBar();
+				continue;
+			}
+
+			const data = await response.json();
+
+			if (data.length === 0) {
+				// On log uniquement les mods demandés par l'utilisateur
+				if (!mod.isDependency) {
+					notAvailable.push({
+						id: mod.id,
+						icon_url: mod.icon_url,
+						title: mod.title
+					});
+				}
+
+				stepLoadingBar();
+				continue;
+			}
+
+			const versionData = data[0];
+
+			// -----------------------------
+			// Gestion des dépendances
+			// -----------------------------
+			if (downloadDependenciesCheckbox.checked) {
+				for (const dep of versionData.dependencies || []) {
+					if (
+						dep["dependency_type"] === "required" &&
+						dep["project_id"] && !queuedIds.has(dep["project_id"])
+					) {
+						queue.push({
+							id: dep["project_id"],
+							icon_url: null,
+							title: dep["project_id"],
+							isDependency: true
+						});
+
+						queuedIds.add(dep["project_id"]);
+					}
+				}
+			}
+
+			// Si la version n'a pas de fichiers
+			if (!versionData.files || versionData.files.length === 0) {
+				stepLoadingBar();
+				continue;
+			}
+
+			const fileInfo = versionData.files[0];
+
+			// Télécharger le fichier jar
+			const fileResponse = await fetch(fileInfo.url);
+
+			if (!fileResponse.ok) {
+				stepLoadingBar();
+				continue;
+			}
+
+			const blob = await fileResponse.blob();
+			const arrayBuffer = await blob.arrayBuffer();
+
+			// Ajouter au zip
+			zip.file(fileInfo.filename, arrayBuffer);
+
+		} catch (error) {
+			console.error("Erreur avec le mod :", mod.id, error);
 		}
 
-		const data = await response.json();
-		if (data.length === 0) {
-			notAvailable.push({"id": mod.id, "icon_url": mod.icon_url, "title": mod.title});
-			stepLoadingBar();
-			return null;
-		}
-
-		const fileInfo = data[0].files[0];
-
-		// Télécharger le fichier jar
-		const fileResponse = await fetch(fileInfo.url);
-		if (!fileResponse.ok) {
-			stepLoadingBar();
-			return null;
-		}
-
-		const blob = await fileResponse.blob();
-		const arrayBuffer = await blob.arrayBuffer();
-
-		// Ajouter au zip
-		zip.file(fileInfo.filename, arrayBuffer);
+		// Ajuster dynamiquement la barre si nouvelles dépendances ajoutées
+		setNbSteps(queuedIds.size + 2)
 
 		stepLoadingBar();
+	}
 
-		return fileInfo.filename;
-	});
-
-	// Attendre tous les fetchs
-	await Promise.all(fetchPromises);
-
-	localStorage.setItem("logs", JSON.stringify({
-		"date": new Date().toISOString(),
-		"loader": loader,
-		"version": version,
-		"notAvailableMods": notAvailable
-	}));
+	localStorage.setItem(
+		"logs",
+		JSON.stringify({
+			"date": new Date().toISOString(),
+			loader,
+			version,
+			"notAvailableMods": notAvailable
+		})
+	);
 
 	// Générer le fichier zip
 	const content = await zip.generateAsync({type: "blob"});

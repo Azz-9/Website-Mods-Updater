@@ -17,6 +17,7 @@
 		"label": "Chargement..."
 	},
 	"home": {
+		"download_dependencies": "Télécharger les dépendances",
 		"drag_n_drop": {
 			"label": "Glissez déposez vos mods ici !"
 		},
@@ -58,7 +59,8 @@
 		"search_results": {
 			"downloads": "téléchargements",
 			"followers": "abonnés",
-			"add_mod": "Ajouter ce mod"
+			"add_mod": "Ajouter ce mod",
+			"already_added": "Déjà ajouté"
 		}
 	},
 	"logs": {

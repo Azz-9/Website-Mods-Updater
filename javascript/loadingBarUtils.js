@@ -33,6 +33,10 @@ function stepLoadingBar() {
 	loadingBarFill.style.width = `${(currentStep / steps) * 100}%`;
 }
 
+function setNbSteps(nbSteps) {
+	steps = nbSteps;
+}
+
 function finishLoadingBar() {
 	if (!isStarted) {
 		throw new Error("Loading bar is not started");
