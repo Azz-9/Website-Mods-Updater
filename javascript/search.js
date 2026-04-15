@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		document.querySelectorAll("#filters-section > .filter > ol").forEach(list => {
 			list.addEventListener("scroll", () => {
 				const atTop = list.scrollTop === 0;
-				const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight;
+				const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
 
 				if (atTop) {
 					list.classList.add('at-top');

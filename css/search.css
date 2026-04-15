@@ -54,7 +54,8 @@ input:checked + .checkbox-label::after {
 	}
 
 	& ol {
-		display: none;
+		max-height: 0;
+		margin-bottom: 0;
 	}
 }
 
@@ -86,6 +87,7 @@ input:checked + .checkbox-label::after {
 	flex-direction: column;
 	gap: 5px;
 	color: var(--secondary-text);
+	transition: max-height 0.2s ease, margin-bottom 0.2s ease;
 
 	&.has-overflow.at-top {
 		mask-image: linear-gradient(to top, transparent, black 10%, black 100%);
