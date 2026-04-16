@@ -1,5 +1,7 @@
 let currentAbortController = null;
 
+const currentProfileId = localStorage.getItem("currentProfile") || "default";
+
 async function fetchData(query, limit, offset, index, facets) {
 	if (currentAbortController) {
 		currentAbortController.abort();
@@ -132,11 +134,9 @@ async function getModView(result) {
 	addButton.addEventListener("click", () => {
 		addMod(mod).then(added => {
 			if (added) {
+				addModToProfile(currentProfileId, mod.id, true);
 				disableButton();
-
-				if (document.querySelector("#hide-saved-mods").checked) {
-					search();
-				}
+				if (document.querySelector("#hide-saved-mods").checked) search();
 			}
 		});
 	});
@@ -289,7 +289,7 @@ const defaultPage = 1;
 
 document.addEventListener('DOMContentLoaded', async () => {
 	await i18n.init();
-	
+
 	const promises = [];
 	promises.push(fetch("https://api.modrinth.com/v2/tag/game_version").then(response => response.json()).then(versions => {
 		const list = document.querySelector("#game-version-filter > ol");

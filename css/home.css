@@ -78,3 +78,39 @@
 	width: max-content;
 	cursor: pointer;
 }
+
+#profile-container {
+	display: flex;
+	align-items: stretch;
+	gap: 10px;
+}
+
+#profile-container > button {
+	display: flex;
+	align-items: center;
+	background-color: #333;
+	border-radius: 14px;
+	border: 4px solid #222;
+	transition: all 0.2s ease;
+	cursor: pointer;
+	color: var(--main-text);
+	padding-inline: 10px;
+	gap: 0.5rem;
+}
+
+#profile-container > button > svg {
+	fill: var(--main-text);
+}
+
+#profile-container > button:not(:disabled):hover {
+	border-color: var(--accent-color);
+}
+
+#profile-container > button:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+#remove-profile-btn:not(:disabled):hover {
+	border-color: #ff5555 !important;
+}

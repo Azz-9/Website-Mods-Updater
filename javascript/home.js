@@ -8,7 +8,11 @@ let noModsSpan;
 
 let modsListTitle;
 let searchInput;
-let downloadDependenciesCheckbox
+let downloadDependenciesCheckbox;
+let profileSelect;
+let removeProfileBtn;
+
+let currentProfileId = localStorage.getItem("currentProfile") || "default";
 
 document.addEventListener("DOMContentLoaded", async () => {
 	noModsDiv = document.querySelector("#no-mods");
@@ -16,6 +20,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 	modsListTitle = document.querySelector("#mods-list > h2");
 	searchInput = document.querySelector("#search-input");
 	downloadDependenciesCheckbox = document.querySelector("#download-dependencies");
+	profileSelect = document.querySelector("#profile-select");
+	const renameProfileBtn = document.querySelector("#rename-profile-btn");
+	const addProfileBtn = document.querySelector("#add-profile-btn");
+	removeProfileBtn = document.querySelector("#remove-profile-btn");
 
 	await i18n.init(refreshModsList);
 
@@ -93,12 +101,61 @@ document.addEventListener("DOMContentLoaded", async () => {
 		localStorage.setItem("version", versionSelect.value);
 	})
 
+	profileSelect.addEventListener("change", () => {
+		currentProfileId = profileSelect.value;
+		localStorage.setItem("currentProfile", currentProfileId);
+		refreshModsList();
+	});
+
+	renameProfileBtn.addEventListener("click", () => {
+		const name = prompt(i18n.get("home.profile.rename_prompt"));
+		if (!name) return;
+
+		renameProfile(currentProfileId, name).then(() => {
+			refreshProfileSelect();
+		})
+	})
+
+	addProfileBtn.addEventListener("click", () => {
+		const name = prompt(i18n.get("home.profile.new_prompt"));
+		if (!name) return;
+		const id = crypto.randomUUID();
+		addProfile({id, name}).then(() => {
+			currentProfileId = id;
+			localStorage.setItem("currentProfile", currentProfileId);
+			refreshProfileSelect();
+			refreshModsList();
+		});
+	});
+
+	removeProfileBtn.addEventListener("click", async () => {
+		const profiles = await getAllProfiles();
+		if (profiles.length === 1) return;
+
+		const confirmed = confirm(i18n.get("home.profile.remove_prompt"));
+		if (!confirmed) return;
+		deleteProfile(currentProfileId).then(async () => {
+			const profiles = await getAllProfiles();
+			localStorage.setItem("currentProfile", profiles[0].id);
+			currentProfileId = localStorage.getItem("currentProfile");
+			refreshProfileSelect();
+			refreshModsList();
+		});
+	})
+
+	getAllProfiles().then(async (profiles) => {
+		if (!profiles.find(p => p.id === "default")) {
+			await addProfile({id: "default", name: "Default"})
+		}
+		refreshProfileSelect();
+	});
+
 	refreshModsList().then(() => {
 		refreshPagination();
 	});
 
 	updateModsBtn.addEventListener("click", async () => {
-		getAllMods().then(async mods => {
+		getModsForProfile(currentProfileId).then(async mods => {
 			const loader = loaderSelect.value;
 			const version = versionSelect.value;
 
@@ -107,10 +164,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 	});
 });
 
+function refreshProfileSelect() {
+	getAllProfiles().then(profiles => {
+		profileSelect.innerHTML = "";
+		profiles.forEach(p => {
+			const opt = new Option(p.name, p.id);
+			profileSelect.add(opt);
+		});
+		profileSelect.value = currentProfileId;
+
+		removeProfileBtn.disabled = profiles.length === 1;
+	});
+}
 
 function refreshModsList() {
 	const query = searchInput.value;
-	return getAllMods().then(mods => {
+	return getModsForProfile(currentProfileId).then(mods => {
 
 		modsListTitle.innerText = i18n.get("home.mods_list.title", {count: mods.length});
 
@@ -173,12 +242,12 @@ function refreshModsList() {
 			el.querySelector(".right-info > input").checked = mod.enabled;
 
 			checkbox.addEventListener("change", (event) => {
-				setEnabled(mod.id, event.target.checked);
+				setEnabled(currentProfileId, mod.id, event.target.checked);
 			});
 
 			// Delete handler: remove the inserted element
 			el.querySelector(".red-btn").addEventListener("click", () => {
-				deleteMod(mod.id).then(deleted => {
+				removeModFromProfile(currentProfileId, mod.id).then(deleted => {
 					if (deleted) {
 						el.remove(); // remove the actual card element
 					}

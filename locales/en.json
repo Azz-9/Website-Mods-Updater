@@ -22,6 +22,14 @@
 		"drag_n_drop": {
 			"label": "Drag and drop your mods here!"
 		},
+		"profile": {
+			"new": "New profile",
+			"remove": "Delete profile",
+			"rename": "Rename profile",
+			"new_prompt": "Profile name:",
+			"rename_prompt": "New profile name:",
+			"remove_prompt": "Are you sure you want to remove this profile?"
+		},
 		"mods_list": {
 			"title": "Your mods ({{count}})",
 			"search_placeholder": "Search for a mod...",

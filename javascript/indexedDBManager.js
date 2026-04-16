@@ -1,6 +1,6 @@
 let db;
 let dbReady = new Promise((resolve, reject) => {
-	const request = window.indexedDB.open("mods-db", 1);
+	const request = window.indexedDB.open("mods-db", 2);
 
 	request.onerror = (event) => reject(event.target.error);
 
@@ -11,48 +11,134 @@ let dbReady = new Promise((resolve, reject) => {
 
 	request.onupgradeneeded = (event) => {
 		db = event.target.result;
-		if (!db.objectStoreNames.contains("mods")) {
+		const oldVersion = event.oldVersion;
+
+		// v1 → création du store mods
+		if (oldVersion < 1) {
 			db.createObjectStore("mods", {keyPath: "id"});
+		}
+
+		// v1 → v2 : ajout des profils et de la table de liaison
+		if (oldVersion < 2) {
+			db.createObjectStore("profiles", {keyPath: "id"});
+
+			const profileMods = db.createObjectStore("profileMods", {keyPath: "id"});
+			profileMods.createIndex("byProfile", "profileId", {unique: false});
+			profileMods.createIndex("byMod", "modId", {unique: false});
+
+			// Migration : récupérer les mods existants et créer un profil "Default"
+			// (fait dans la transaction onupgradeneeded via event.target.transaction)
+			const tx = event.target.transaction;
+			const profileStore = tx.objectStore("profiles");
+			const profileModsStore = tx.objectStore("profileMods");
+			const modsStore = tx.objectStore("mods");
+
+			const defaultProfile = {id: "default", name: "Default"};
+			profileStore.add(defaultProfile);
+
+			// Migrer les mods existants vers le profil default
+			modsStore.getAll().onsuccess = (e) => {
+				for (const mod of e.target.result) {
+					const enabled = mod.enabled ?? true;
+					delete mod.enabled; // nettoyer le champ
+					modsStore.put(mod);
+					profileModsStore.add({
+						id: `default_${mod.id}`,
+						profileId: "default",
+						modId: mod.id,
+						enabled,
+					});
+				}
+			};
 		}
 	};
 });
 
+// --- profils ---
 
-function addMod(mod) {
-	if (!(mod instanceof Mod)) {
-		throw new Error("Invalid mod type");
-	}
-
+function addProfile(profile) {
+	// profile : { id, name }
 	return new Promise((resolve, reject) => {
 		dbReady.then(() => {
-			const transaction = db.transaction(["mods"], "readwrite");
-			const store = transaction.objectStore("mods");
+			const tx = db.transaction(["profiles"], "readwrite");
+			const store = tx.objectStore("profiles");
+			const req = store.add(profile);
+			req.onsuccess = () => resolve(true);
+			req.onerror = (e) => reject(e.target.error);
+		});
+	});
+}
 
-			// Check if mod already exists
-			const getRequest = store.get(mod.id);
+function deleteProfile(profileId) {
+	return new Promise((resolve, reject) => {
+		dbReady.then(() => {
+			const tx = db.transaction(["profiles", "profileMods"], "readwrite");
 
-			getRequest.onsuccess = (event) => {
-				if (event.target.result) {
-					// Already exists
-					resolve(false);
-				} else {
-					// Add new mod
-					const addRequest = store.add(mod);
-
-					addRequest.onsuccess = () => {
-						resolve(true);
-					};
-
-					addRequest.onerror = (e) => {
-						console.error("Error adding mod:", e.target.error);
-						reject(e.target.error);
-					};
+			// Supprimer toutes les liaisons du profil
+			const pmStore = tx.objectStore("profileMods");
+			const index = pmStore.index("byProfile");
+			index.openCursor(IDBKeyRange.only(profileId)).onsuccess = (e) => {
+				const cursor = e.target.result;
+				if (cursor) {
+					cursor.delete();
+					cursor.continue();
 				}
 			};
 
-			getRequest.onerror = (e) => {
-				console.error("Error checking mod existence:", e.target.error);
-				reject(e.target.error);
+			// Supprimer le profil lui-même
+			tx.objectStore("profiles").delete(profileId);
+
+			tx.oncomplete = () => resolve(true);
+			tx.onerror = (e) => reject(e.target.error);
+		});
+	});
+}
+
+function getAllProfiles() {
+	return new Promise((resolve, reject) => {
+		dbReady.then(() => {
+			const tx = db.transaction(["profiles"], "readonly");
+			tx.objectStore("profiles").getAll().onsuccess = (e) => resolve(e.target.result);
+		});
+	});
+}
+
+function renameProfile(profileId, newName) {
+	return new Promise((resolve, reject) => {
+		dbReady.then(() => {
+			const tx = db.transaction(["profiles"], "readwrite");
+			const store = tx.objectStore("profiles");
+
+			store.get(profileId).onsuccess = (e) => {
+				const profile = e.target.result;
+
+				if (!profile) return reject(new Error("Profile not found"));
+
+				profile.name = newName;
+				store.put(profile).onsuccess = () => resolve(true);
+			};
+
+			tx.onerror = (e) => reject(e.target.error);
+		});
+	});
+}
+
+// --- Mods ---
+
+function addMod(mod) {
+	if (!(mod instanceof Mod)) throw new Error("Invalid mod type");
+
+	return new Promise((resolve, reject) => {
+		dbReady.then(() => {
+			const tx = db.transaction(["mods"], "readwrite");
+			const store = tx.objectStore("mods");
+
+			store.get(mod.id).onsuccess = (e) => {
+				if (e.target.result) {
+					resolve(false);
+				} else {
+					store.add(mod).onsuccess = () => resolve(true);
+				}
 			};
 		});
 	});
@@ -61,49 +147,33 @@ function addMod(mod) {
 function deleteMod(id) {
 	return new Promise((resolve, reject) => {
 		dbReady.then(() => {
-			if (!id) {
-				reject(new Error("Invalid id"));
-				return;
-			}
+			if (!id) return reject(new Error("Invalid id"));
 
-			const transaction = db.transaction(["mods"], "readwrite");
-			const store = transaction.objectStore("mods");
+			const tx = db.transaction(["mods", "profileMods"], "readwrite");
 
-			const request = store.delete(id);
-
-			request.onsuccess = () => {
-				resolve(true);
+			// Supprimer toutes les liaisons de ce mod
+			const pmStore = tx.objectStore("profileMods");
+			pmStore.index("byMod").openCursor(IDBKeyRange.only(id)).onsuccess = (e) => {
+				const cursor = e.target.result;
+				if (cursor) {
+					cursor.delete();
+					cursor.continue();
+				}
 			};
 
-			request.onerror = (e) => {
-				console.error("Error deleting mod:", e.target.error);
-				reject(e.target.error);
-			};
+			tx.objectStore("mods").delete(id);
+			tx.oncomplete = () => resolve(true);
+			tx.onerror = (e) => reject(e.target.error);
 		});
 	});
 }
 
-
 function modExists(id) {
 	return new Promise((resolve, reject) => {
 		dbReady.then(() => {
-			if (!id) {
-				reject(new Error("Invalid id"));
-				return;
-			}
-
-			const transaction = db.transaction(["mods"], "readonly");
-			const store = transaction.objectStore("mods");
-
-			const request = store.get(id);
-
-			request.onsuccess = (event) => {
-				resolve(!!event.target.result); // true si trouvé, false sinon
-			};
-
-			request.onerror = (e) => {
-				reject(e.target.error);
-			};
+			if (!id) return reject(new Error("Invalid id"));
+			const tx = db.transaction(["mods"], "readonly");
+			tx.objectStore("mods").get(id).onsuccess = (e) => resolve(!!e.target.result);
 		});
 	});
 }
@@ -111,110 +181,102 @@ function modExists(id) {
 function getAllMods() {
 	return new Promise((resolve, reject) => {
 		dbReady.then(() => {
-			const transaction = db.transaction(["mods"], "readonly");
-			const store = transaction.objectStore("mods");
-
-			const request = store.getAll();
-
-			request.onsuccess = (event) => {
-				resolve(event.target.result);
-			};
-
-			request.onerror = (e) => {
-				reject(e.target.error);
-			};
+			const tx = db.transaction(["mods"], "readonly");
+			tx.objectStore("mods").getAll().onsuccess = (e) => resolve(e.target.result);
 		});
 	});
 }
 
-function setEnabled(id, enabled) {
+
+// --- liaison profil ↔ mod --- 
+
+/** Ajoute un mod à un profil (enabled: true par défaut) */
+function addModToProfile(profileId, modId, enabled = true) {
 	return new Promise((resolve, reject) => {
 		dbReady.then(() => {
-			if (!id) {
-				reject(new Error("Invalid id"));
-				return;
-			}
+			const tx = db.transaction(["profileMods"], "readwrite");
+			const store = tx.objectStore("profileMods");
+			const id = `${profileId}_${modId}`;
 
-			const transaction = db.transaction(["mods"], "readwrite");
-			const store = transaction.objectStore("mods");
+			store.get(id).onsuccess = (e) => {
+				if (e.target.result) return resolve(false); // déjà présent
 
-			// Get the mod by id
-			const getRequest = store.get(id);
+				store.add({id, profileId, modId, enabled}).onsuccess = () => resolve(true);
+			};
+			tx.onerror = (e) => reject(e.target.error);
+		});
+	});
+}
 
-			getRequest.onsuccess = (event) => {
-				const mod = event.target.result;
+/** Retire un mod d'un profil */
+function removeModFromProfile(profileId, modId) {
+	return new Promise((resolve, reject) => {
+		dbReady.then(async () => {
+			const tx = db.transaction(["profileMods"], "readwrite");
+			tx.objectStore("profileMods").delete(`${profileId}_${modId}`);
+			tx.oncomplete = async () => {
+				// Vérifier si le mod est encore dans au moins un profil
+				const index = db.transaction(["profileMods"], "readonly")
+					.objectStore("profileMods")
+					.index("byMod");
 
-				if (!mod) {
-					reject(new Error("Mod not found"));
-					return;
-				}
-
-				// Update enabled attribute
-				mod.enabled = enabled;
-
-				// Save updated object
-				const updateRequest = store.put(mod);
-
-				updateRequest.onsuccess = () => {
+				index.getAll(IDBKeyRange.only(modId)).onsuccess = async (e) => {
+					if (e.target.result.length === 0) {
+						await deleteMod(modId);
+					}
 					resolve(true);
 				};
-
-				updateRequest.onerror = (e) => {
-					console.error("Error updating mod:", e.target.error);
-					reject(e.target.error);
-				};
 			};
-
-			getRequest.onerror = (e) => {
-				console.error("Error fetching mod:", e.target.error);
-				reject(e.target.error);
-			};
+			tx.onerror = (e) => reject(e.target.error);
 		});
 	});
 }
 
-function getMod(id) {
+/** Active/désactive un mod dans un profil spécifique */
+function setEnabled(profileId, modId, enabled) {
 	return new Promise((resolve, reject) => {
 		dbReady.then(() => {
-			if (!id) {
-				reject(new Error("Invalid id"));
-				return;
-			}
+			const tx = db.transaction(["profileMods"], "readwrite");
+			const store = tx.objectStore("profileMods");
+			const id = `${profileId}_${modId}`;
 
-			const transaction = db.transaction(["mods"], "readonly");
-			const store = transaction.objectStore("mods");
+			store.get(id).onsuccess = (e) => {
+				const entry = e.target.result;
+				if (!entry) return reject(new Error("Mod not in profile"));
 
-			const request = store.get(id);
-
-			request.onsuccess = (event) => {
-				resolve(event.target.result);
+				entry.enabled = enabled;
+				store.put(entry).onsuccess = () => resolve(true);
 			};
-			request.onerror = (e) => {
-				reject(e.target.error);
-			};
+			tx.onerror = (e) => reject(e.target.error);
 		});
-	})
+	});
 }
 
-function getMods(ids) {
+/** Retourne tous les mods d'un profil, avec leur état enabled */
+function getModsForProfile(profileId) {
 	return new Promise((resolve, reject) => {
 		dbReady.then(() => {
-			if (!ids || !Array.isArray(ids) || ids.length === 0) {
-				reject(new Error("Invalid ids"));
-				return;
-			}
+			const tx = db.transaction(["mods", "profileMods"], "readonly");
+			const pmStore = tx.objectStore("profileMods");
+			const modsStore = tx.objectStore("mods");
 
-			const transaction = db.transaction(["mods"], "readonly");
-			const store = transaction.objectStore("mods");
+			pmStore.index("byProfile").getAll(IDBKeyRange.only(profileId)).onsuccess = (e) => {
+				const links = e.target.result; // [{ modId, enabled, ... }]
+				const results = [];
+				let pending = links.length;
 
-			const request = store.getAll(ids);
+				if (pending === 0) return resolve([]);
 
-			request.onsuccess = (event) => {
-				resolve(event.target.result);
+				for (const link of links) {
+					modsStore.get(link.modId).onsuccess = (e2) => {
+						if (e2.target.result) {
+							results.push({...e2.target.result, enabled: link.enabled});
+						}
+						if (--pending === 0) resolve(results);
+					};
+				}
 			};
-			request.onerror = (e) => {
-				reject(e.target.error);
-			};
+			tx.onerror = (e) => reject(e.target.error);
 		});
-	})
+	});
 }

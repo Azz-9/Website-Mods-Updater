@@ -21,6 +21,14 @@
 		"drag_n_drop": {
 			"label": "Glissez déposez vos mods ici !"
 		},
+		"profile": {
+			"new": "Nouveau profil",
+			"remove": "Supprimer le profil",
+			"rename": "Renommer le profil",
+			"new_prompt": "Nom du profil :",
+			"rename_prompt": "Nouveau nom du profil :",
+			"remove_prompt": "Voulez-vous vraiment supprimer ce profile ?"
+		},
 		"mods_list": {
 			"title": "Vos mods ({{count}})",
 			"search_placeholder": "Rechercher un mod...",
