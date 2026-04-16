@@ -40,7 +40,11 @@
 		},
 		"modal": {
 			"not_found_title": "Mods not found"
-		}
+		},
+		"export": "Export",
+		"import": "Import",
+		"export-profile": "Export profile",
+		"import-profile": "Import profile"
 	},
 	"search": {
 		"filter": {

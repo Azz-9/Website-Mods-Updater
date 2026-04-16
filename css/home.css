@@ -85,7 +85,7 @@
 	gap: 10px;
 }
 
-#profile-container > button {
+.secondary-btn {
 	display: flex;
 	align-items: center;
 	background-color: #333;
@@ -98,19 +98,28 @@
 	gap: 0.5rem;
 }
 
-#profile-container > button > svg {
+.secondary-btn > svg {
 	fill: var(--main-text);
 }
 
-#profile-container > button:not(:disabled):hover {
+.secondary-btn:not(:disabled):hover {
 	border-color: var(--accent-color);
 }
 
-#profile-container > button:disabled {
+.secondary-btn:disabled {
 	cursor: default;
 	opacity: 0.5;
 }
 
 #remove-profile-btn:not(:disabled):hover {
-	border-color: #ff5555 !important;
+	border-color: #ff5555;
+}
+
+.commands {
+	display: flex;
+	gap: 10px;
+}
+
+.commands > button {
+	height: 40px;
 }

@@ -24,6 +24,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 	const renameProfileBtn = document.querySelector("#rename-profile-btn");
 	const addProfileBtn = document.querySelector("#add-profile-btn");
 	removeProfileBtn = document.querySelector("#remove-profile-btn");
+	const exportBtn = document.querySelector("#export-btn");
+	const importBtn = document.querySelector("#import-btn");
+	const importInput = document.querySelector("#import-input");
+	const exportProfileBtn = document.querySelector("#export-profile-btn");
+	const importProfileBtn = document.querySelector("#import-profile-btn");
+	const importProfileInput = document.querySelector("#import-profile-input");
 
 	await i18n.init(refreshModsList);
 
@@ -124,6 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 			currentProfileId = id;
 			localStorage.setItem("currentProfile", currentProfileId);
 			refreshProfileSelect();
+			refreshPagination();
 			refreshModsList();
 		});
 	});
@@ -161,6 +168,37 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 			downloadModsAsZip(mods, loader, version);
 		});
+	});
+
+	exportBtn.addEventListener("click", () => exportDB());
+
+	importBtn.addEventListener("click", () => importInput.click());
+
+	importInput.addEventListener("change", () => {
+		console.log("changed")
+		importDB(importInput.files[0]).then(async () => {
+			const profiles = await getAllProfiles();
+			localStorage.setItem("currentProfile", profiles[0].id);
+			currentProfileId = localStorage.getItem("currentProfile");
+
+			refreshProfileSelect();
+			await refreshModsList();
+			refreshPagination();
+			await refreshModsList();
+		});
+	});
+
+	exportProfileBtn.addEventListener("click", () => exportProfile(currentProfileId));
+
+	importProfileBtn.addEventListener("click", () => importProfileInput.click());
+
+	importProfileInput.addEventListener("change", () => {
+		importProfile(importProfileInput.files[0]).then(newId => {
+			currentProfileId = newId;
+			localStorage.setItem('currentProfile', currentProfileId);
+			refreshProfileSelect();
+			refreshModsList();
+		})
 	});
 });
 

@@ -280,3 +280,159 @@ function getModsForProfile(profileId) {
 		});
 	});
 }
+
+// --- export / import ---
+
+async function exportDB() {
+	const [mods, profiles, profileMods] = await Promise.all([
+		getAllMods(),
+		getAllProfiles(),
+		new Promise((resolve, reject) => {
+			dbReady.then(() => {
+				const tx = db.transaction(["profileMods"], "readonly");
+				tx.objectStore("profileMods").getAll().onsuccess = (e) => resolve(e.target.result);
+				tx.onerror = (e) => reject(e.target.error);
+			});
+		})
+	]);
+
+	const data = JSON.stringify({mods, profiles, profileMods}, null, 2);
+	const blob = new Blob([data], {type: "application/json"});
+	const url = URL.createObjectURL(blob);
+
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = "mods-backup.json";
+	a.click();
+
+	URL.revokeObjectURL(url);
+}
+
+async function importDB(file) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+
+		reader.onload = async (e) => {
+			try {
+				const {mods, profiles, profileMods} = JSON.parse(e.target.result);
+
+				await dbReady;
+				const tx = db.transaction(["mods", "profiles", "profileMods"], "readwrite");
+
+				// Vider les stores existants
+				tx.objectStore("mods").clear();
+				tx.objectStore("profiles").clear();
+				tx.objectStore("profileMods").clear();
+
+				tx.oncomplete = async () => {
+					// Réinsérer les données
+					const tx2 = db.transaction(["mods", "profiles", "profileMods"], "readwrite");
+
+					mods.forEach(mod => tx2.objectStore("mods").put(mod));
+					profiles.forEach(profile => tx2.objectStore("profiles").put(profile));
+					profileMods.forEach(pm => tx2.objectStore("profileMods").put(pm));
+
+					tx2.oncomplete = () => resolve(true);
+					tx2.onerror = (e) => reject(e.target.error);
+				};
+
+				tx.onerror = (e) => reject(e.target.error);
+
+			} catch (err) {
+				reject(new Error("Fichier invalide : " + err.message));
+			}
+		};
+
+		reader.onerror = () => reject(new Error("Erreur de lecture du fichier"));
+		reader.readAsText(file);
+	});
+}
+
+async function exportProfile(profileId) {
+	const profile = await new Promise((resolve, reject) => {
+		dbReady.then(() => {
+			const tx = db.transaction(["profiles"], "readonly");
+			tx.objectStore("profiles").get(profileId).onsuccess = (e) => resolve(e.target.result);
+			tx.onerror = (e) => reject(e.target.error);
+		});
+	});
+
+	if (!profile) throw new Error("Profile not found");
+
+	const mods = await getModsForProfile(profileId);
+
+	const profileMods = await new Promise((resolve, reject) => {
+		dbReady.then(() => {
+			const tx = db.transaction(["profileMods"], "readonly");
+			tx.objectStore("profileMods").index("byProfile").getAll(IDBKeyRange.only(profileId)).onsuccess = (e) => resolve(e.target.result);
+			tx.onerror = (e) => reject(e.target.error);
+		});
+	});
+
+	const data = JSON.stringify({profile, mods, profileMods}, null, 2);
+	const blob = new Blob([data], {type: "application/json"});
+	const url = URL.createObjectURL(blob);
+
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = `profile-${profile.name}.json`;
+	a.click();
+
+	URL.revokeObjectURL(url);
+}
+
+async function importProfile(file) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+
+		reader.onload = async (e) => {
+			try {
+				const {profile, mods, profileMods} = JSON.parse(e.target.result);
+
+				await dbReady;
+
+				// Si un profil avec le même id existe déjà, générer un nouvel id
+				const existingProfile = await new Promise((res) => {
+					const tx = db.transaction(["profiles"], "readonly");
+					tx.objectStore("profiles").get(profile.id).onsuccess = (e) => res(e.target.result);
+				});
+
+				let profileId = profile.id;
+				if (existingProfile) {
+					profileId = crypto.randomUUID();
+					profile.id = profileId;
+					profile.name = profile.name + " (imported)";
+				}
+
+				const tx = db.transaction(["mods", "profiles", "profileMods"], "readwrite");
+
+				// Insérer le profil
+				tx.objectStore("profiles").put(profile);
+
+				// Insérer les mods (put pour ne pas écraser si déjà présents)
+				mods.forEach(mod => {
+					const {enabled, ...modWithoutEnabled} = mod; // retirer enabled qui est propre au profileMod
+					tx.objectStore("mods").put(modWithoutEnabled);
+				});
+
+				// Insérer les liaisons en mettant à jour l'id si le profileId a changé
+				profileMods.forEach(pm => {
+					tx.objectStore("profileMods").put({
+						...pm,
+						id: `${profileId}_${pm.modId}`,
+						profileId,
+					});
+				});
+
+				tx.oncomplete = () => resolve(profileId);
+				tx.onerror = (e) => reject(e.target.error);
+
+			} catch (err) {
+				reject(new Error("Fichier invalide : " + err.message));
+			}
+		};
+
+		reader.onerror = () => reject(new Error("Erreur de lecture du fichier"));
+		reader.readAsText(file);
+	});
+}
